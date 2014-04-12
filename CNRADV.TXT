@@ -1,0 +1,294 @@
+CNRADV.EXE is a sample program for container controls that builds on the
+CNRMENU.EXE sample program. I will go into the additions at the end of this
+little doc. Please read those notes as there are some things that you
+probably need to know if you will implement these features in your own
+containers.
+
+CNRMENU.EXE and its source code is downloadable from Compuserve (OS2DF1 forum,
+PM section) as CNRMNU.ZIP. It is a sample program that demonstrates setting up
+a container control, context menus, sorting, source emphasis and direct
+editing. CNRADV takes CNRMENU a little further by demonstrating drag/drop,
+ownerdraw, and Mini Icons (at least a kludge to get MiniIcons working).
+
+CNRADV creates a standard window with a container as a child of the client
+window. Once created, the files found in a directory are inserted into the
+container and any subdirectories are traversed and inserted into the container
+in a tree format. This directory can be specified on the command line (i.e.
+'CNRADV path'). If not specified it defaults to the current directory.
+
+A secondary thread is employed to fill the container since filling it could
+take a while depending on what directory was specified and how many
+subdirectories it has, and how many subdirectories that has (you get the
+picture <g>). This allows the user to interact with the container while it is
+being filled.
+
+The Directory window uses DosFindFirst/DosFindNext to get a directory listing
+in order to populate the container. By using the context menu while over a
+subdirectory's icon or doubleclicking on a subdirectory's icon you can create
+another directory window that represents that subdirectory. When that window
+is created, its container uses the records from the first one so it doesn't
+need to do the FindFirst/FindNext. This is a capability of the container
+control (shared records). It substantially reduces memory requirements in a
+program that has multiple views of the same container (like the WPS does with
+folders).
+
+The context menu changes depending on whether the mouse pointer is over a
+directory when the right mouse button is pressed.
+
+My coding style uses extensive error-checking. This, combined with the fact
+that this program gets rather involved, makes this a relatively difficult
+sample program to follow. I've tried to include as many comments as possible
+but admittedly you still may have problems following it. Please get ahold of
+me on Compuserve if you have questions.
+
+CNRADV.EXE is built from 9 source modules:
+
+CNRADV.C   - base code and client window procedure
+COMMON.C   - functions common to all modules
+CREATE.C   - code related to creating the directory windows
+CTXTMENU.C - code related to context menus
+EDIT.C     - code related to direct editing
+POPULATE.C - code related to populating the containers (separate thread)
+SORT.C     - code related to container sorting
+DRAG.C     - code related to Drag/Drop
+DRAW.C     - code related to Ownerdraw
+
+The following displays the initialization of the container as it relates to
+the 4 source modules that make up CNRADV.EXE initialization. The extern
+functions in the source modules are shown.
+
+
+  PRIMARY THREAD                           SECONDARY THREAD
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿                    ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³           ÚÄÄÄÄÄÄÄÄ´                    ³                             ³
+³ CNRMENU.C ³        ³        (4)         ³         POPULATE.C          ³
+³   ³  ³    ³       <ÄUM_CONTAINER_FILLEDÄÄÄÄÄÄÄÄÄÄÄ                    ³
+³³  ³  ³    ³WinProc ³                    ³                             ³
+³³  ³  ³    ³        ³                    ³  ÚÄ> PopulateContainer()    ³
+³³  ³  ³    ³        ³                    ³  ³                          ³
+À³ÄÄ³ÄÄ³ÄÄÄÄÁÄÄÄÄÄÄÄÄÙ                    ÀÄÄ³ÄÄÄÄÄÄÄÄÄÄ³ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+ ³  ³  ³                                     ³          ³
+ ³  ³ (1)                                    ³          ³
+ ³  ³  ³                                     ³          ³
+ ³ (2) ³                                     ³          ³
+ ³  ³  ³                                     ³          ³
+Ú³ÄÄ³ÄÄ³ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿            ³          ³
+³³  ³  ³                        ³       _beginthread()  ³
+³³  ³  ³    CREATE.C            ³            ³          ³
+³³  ³  ³                        ³            ³          ³
+³³  ³  ³                        ³            ³          ³
+³³  ³  ÀÄ> CreateDirectoryWin() ³            ³          ³
+³³  ³                           ³            ³          ³
+³³  ÀÄ> CreateContainer() ÄÄÄÄÄÄÄÄÄÄÄÄ(3)ÄÄÄÄÙ          ³
+³³                              ³                       ³
+À³ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ³ÄÄÄÄÄÄÄÙ                       ³
+ ³                      ³                               ³
+ ³                   ÚÄÄ³ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ³ÄÄÄ¿
+ ³                   ³  v                               v   ³
+ ³                   ³                                      ³
+ ³                   ³              COMMON.C                ³
+ ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ>                                   ³
+                     ³                                      ³
+                     ³     SetWindowTitle()                 ³
+                     ³     Msg()                            ³
+                     ³     FullyQualify()                   ³
+                     ³                                      ³
+                     ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+
+(1) - Create the frame/client window.
+(2) - Create the container window as a child of the client.
+(3) - Start a thread that will fill the container with records.
+(4) - When the thread has filled the container, it posts a UM_CONTAINER_FILLED
+      message to the client window.
+
+
+New features not in CNRMENU.EXE
+===============================
+
+SelectionType submenu
+---------------------
+
+The context menu now has a SelectionType submenu that allows you to choose
+between CCS_SINGLESEL, CCS_EXTENDSEL, and CCS_MULTIPLESEL container styles. The
+containers start off in CCS_EXTENDSEL (Extended selection). Using this submenu
+will allow you to see how these three selection techniques differ.
+
+
+New Folder Icon
+---------------
+
+WinLoadFileIcon does not differentiate between normal files and directories.
+This didn't bother me during the first couple of iterations of this sample
+program but irritated me as time went on. So I created my own folder icon and
+load it at program init time. Now directories use this folder icon rather than
+the 'normal file' icon used by directories in CNRBASE and CNRMENU.
+
+
+MiniIcons
+---------
+
+The View submenu now offers MiniIcons as the last menu item. The CV_MINI flag
+is still not working as of the Service Pack. If it were, you could use this
+flag to implement MiniIcons easily. If your icons had mini icons in the .ICO
+file, using CV_MINI would cause the container to use that format. Otherwise the
+container would compress the icon to a 'mini' size. This however is not working.
+
+Peter Haggar, one of the container developers, posted a workaround on CIS that
+CNRADV uses if you choose the MiniIcons menu item. Unfortunately this workaround
+just compresses the icon to a 'mini' size (the height of an action bar). So the
+nice mini icons that are displayed by the WPS folders do not show up. Instead,
+all icons are compressed. Some look good, some don't. The 'normal file' icon
+that the directory windows display the most don't look good compressed against
+a white background. They don't look bad against a red one though.
+
+The MiniIcons menu item toggles between MiniIcons and not. A checkmark will
+display if it is selected (of course it should be obvious by looking at the
+icons <g>).
+
+
+Ownerdraw
+---------
+
+CNRADV implements two types of Ownerdraw. The first one uses the
+CA_OWNERPAINTBACKGROUND container attribute to paint the background of the
+container. This attribute causes the container to send itself a
+CM_PAINTBACKGROUND message at paint time. CNRADV subclasses the container to get
+this message (this is the recommended technique in the docs) and processes it by
+painting the container background. The second type of ownerdraw sets up a
+Details-view column as CFA_OWNER and draws that column.
+
+   *** CA_OWNERPAINTBACKGROUND ***
+
+There is a new submenu in the context menu - Background. This allows you to
+choose between a few colors and 'Bitmap' and demonstrates using the
+CA_OWNERPAINTBACKGROUND container attribute. If you choose a color, CNRADV does
+nothing except a WinFillRect for that color under the CM_PAINTBACKGROUND message
+in the subclassed container window procedure. This could have been implemented
+easier by just using WinSetPresParam on the container but since CNRADV was
+trying to demonstrate the CA_OWNERPAINTBACKGROUND attribute, I figured I'd let
+the user choose a few colors.
+
+The main reason you'd use the CA_OWNERPAINTBACKGROUND is to do something like
+paint a bitmap on the background. 'Bitmap' is the last option on the
+'Background' submenu. The bitmap you'll see is one that I did using the icon
+editor. You will appreciate that I am no artist <g>.
+
+Drawing the bitmap shows the complexity of using CA_OWNERPAINTBACKGROUND. I was
+using this attribute in a few of my containers just to change the background
+color and it was very simple. But using the bitmap showed what was really
+happening behind the scenes and it creates a nightmare for using a bitmap
+backdrop on the container.
+
+It turns out that the container sends itself a CM_PAINTBACKGROUND message for
+each of its windows - there are many windows in a view such as Details view.
+It also sends itself this message when the user selects a record or unselects
+the record so that the background of that record can be repainted. Herein lies
+the difficulty.
+
+Since you get a lot of these messages, you don't want to create and delete the
+bitmap in each message. So what CNRADV does is create the bitmap at program
+init time and use that bitmap handle during CM_PAINTBACKGROUND processing, It
+stretches the bitmap to the rectangle being painted. Well, you can imagine the
+way it looks when each window of Details view has the same bitmap stretched to
+a different size. And each container record has a different version of the
+bitmap under it when the user selects or unselects it. But you don't have to
+imagine it! Just run CNRADV and choose Bitmap from the Background submenu of
+the context menu and you'll see what I mean.
+
+It is also *very* slow drawing the bitmap on a 16mhz 386, especially when all
+you do is select a new record and re-stretches the bitmap each time.
+
+For a 'productional' program you'd obviously want to fix this. I will probably
+create a different presentation space for each window and stretch the bitmap
+within that PS to that window's size every time the directory window gets
+resized. Then come time to CM_PAINTBACKGROUND, I'll just BitBlt the appropriate
+section of the appropriate bitmap to the container window.
+
+In any case, CA_OWNERPAINTBACKGROUND is now OR'ed with the other flWindowAttr
+attributes in CtxtmenuSetView. The code for subclassing and everything else is
+in draw.c.
+
+   *** CFA_OWNER ***
+
+I added a new Details-view column to display file attributes. This is an
+Ownerdraw column (CFA_OWNER). This will demonstrate what you have to do to
+draw a column, both with and without selection emphasis.
+
+
+Drag/Drop
+---------
+
+FOR A GREAT EXAMPLE OF A FULL IMPLEMENTATION OF DRAG/DROP, SEE THE SAMPLE CODE
+PROVIDED BY IBM IN TOOLKT20\C\SAMPLES\DRAGDROP.
+
+CNRADV adds Drag/Drop capability to the directory windows that it creates. You
+may have noticed that without implementing drag/drop the records in a container
+cannot even be moved. Thus programming a container in Icon view will probably
+create a need to implement drag/drop.
+
+There are many different ways to implement drag/drop depending on the complexity
+of the transfer of information between the source and target windows. CNRADV
+uses a rather rudimentary protocol. It uses the OS2FILE rendering mechanism and
+doesn't provide any drop-time rendering. Essentially it can use the information
+available at drop time to do what it has to do so the directory windows don't
+have to communicate with their partner to get any more information after it
+gets a 'drop' message. Because it doesn't have to do this, a large part of
+drag/drop is not covered by this program. But enough is covered so that you can
+see it in action and see what is going on. Implementing rendering should not
+use that many more facilities of Direct Manipulation than are used here.
+
+At this point, if you don't know what rendering is, don't worry. All it really
+means is that a protocol is established between the source and target windows
+and they must abide by those rules to figure out what needs to happen when the
+user drops icons on the target window.
+
+CNRADV processes these WM_CONTROL messages from the container to implement
+drag/drop:
+
+  CN_DRAGINIT  - drag is starting
+  CN_DRAGOVER  - during drag, mouse is over your container
+  CN_DRAGAFTER - same as CN_DRAGOVER except you're in Details view and are
+                 using ordered or mixed target emphasis.
+  CN_DROP      - user is dropping icons on your container.
+
+Also, the DM_DISCARDOBJECT and DM_PRINTOBJECT messages are processed so as to
+demonstrate dropping container records on a printer or shredder.
+
+NOTE that I have experienced some problems after the Service Pack with dropping
+onto my Epson dot matrix printer. Essentially the document makes it to the
+printer object on the desktop but doesn't print. The icon that represents
+the job has a diagonal line between the printer and document meaning the job
+is just sitting there. This happens sporadically. I believe it to be a bug in
+the Service Pack because it prints fine under GA. When this happens I just
+delete the job. I don't know how many of you will also be affected by this...
+
+To get the drag/drop working, I added CA_MIXEDTARGETEMPH to the attributes that
+are set in CtxtmenuSetView and added the catching of the CN_ messages to
+cnradv.c. I also added drag.c which handles all of the drag/drop stuff.
+
+You can drag and drop within a container. You can also drag from one of the
+directory windows to another. Also, you can drag to the WPS folders but only
+a copy operation is permitted so that you don't accidentally delete your files
+from the directory that the directory window represents. You can drag from a
+WPS folder to a directory window but only if it is a folder that originated
+from the Drives folder. The reason for this is that all WPS folders except
+those originating from the Drives folder don't use the 'OS2FILE' rendering
+mechanism so we have no way of getting the file name from them.
+
+You can drag more than one record if you have Extended or Multiple selection
+on (using the SelectionType submenu).
+
+FOR A GREAT EXAMPLE OF A FULL IMPLEMENTATION OF DRAG/DROP, SEE THE SAMPLE CODE
+PROVIDED BY IBM IN TOOLKT20\C\SAMPLES\DRAGDROP.
+
+Hope this sample program helps someone.
+
+Rick Fishman
+Code Blazers, Inc.
+4113 Apricot
+Irvine, CA 92720
+
+CIS ID: 72251,750
+

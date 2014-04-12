@@ -1,0 +1,86 @@
+/*********************************************************************
+ *                                                                   *
+ * MODULE NAME :  cnradv.rc              AUTHOR:  Rick Fishman       *
+ * DATE WRITTEN:  11-30-92                                           *
+ *                                                                   *
+ * DESCRIPTION:                                                      *
+ *                                                                   *
+ *  Resource file for CNRADV.EXE.                                    *
+ *                                                                   *
+ * HISTORY:                                                          *
+ *                                                                   *
+ *  11-30-92 - Source copied from CNRMENU.EXE sample.                *
+ *             Added Selection Type submenu.                         *
+ *             Added items to View submenu.                          *
+ *             Added icons for program and directories.              *
+ *  12-05-92 - Added bitmap for container background                 *
+ *             Added Background submenu.                             *
+ *                                                                   *
+ *  Rick Fishman                                                     *
+ *  Code Blazers, Inc.                                               *
+ *  4113 Apricot                                                     *
+ *  Irvine, CA. 92720                                                *
+ *  CIS ID: 72251,750                                                *
+ *                                                                   *
+ *********************************************************************/
+
+#include <os2.h>
+#include "cnradv.h"
+
+ICON ID_RESOURCES cnradv.ico
+ICON ID_ICON_FOLDER folder.ico
+
+BITMAP ID_BMP_BACKGROUND cnrbgd.bmp
+
+MENU ID_CONTEXT_MENU
+{
+    SUBMENU  "~View    ",               IDM_VIEW_SUBMENU
+    {
+        MENUITEM "~Tree/Icon",          IDM_VIEW_TREEICON
+        MENUITEM "T~ree/Name",          IDM_VIEW_TREENAME
+        MENUITEM "Tree/Te~xt",          IDM_VIEW_TREETEXT
+        MENUITEM "~Name",               IDM_VIEW_NAME
+        MENUITEM "Name/~flowed",        IDM_VIEW_NAMEFLOWED
+        MENUITEM "~Icon",               IDM_VIEW_ICON
+        MENUITEM "~Details",            IDM_VIEW_DETAILS
+        MENUITEM "T~ext",               IDM_VIEW_TEXT
+        MENUITEM "Text/f~lowed",        IDM_VIEW_TEXTFLOWED
+        MENUITEM "~Mini Icons",         IDM_VIEW_MINI
+    }
+
+    SUBMENU  "~Sort",                   IDM_SORT_SUBMENU
+    {
+        MENUITEM "by ~Name",            IDM_SORT_NAME
+        MENUITEM "by ~Date/Time",       IDM_SORT_DATETIME
+        MENUITEM "by D~irectory Order", IDM_SORT_DIRORDER
+    }
+
+    SUBMENU  "~Other Window",           IDM_OTHERWIN_SUBMENU
+    {
+    }
+
+    MENUITEM "~Create New Window",      IDM_CREATE_NEWWIN
+    MENUITEM "~Arrange",                IDM_ARRANGE
+
+    SUBMENU "Selection ~Type",          IDM_SEL_TYPE
+    {
+        MENUITEM "CCS_~SINGLESEL",      IDM_SEL_SINGLE
+        MENUITEM "CCS_~EXTENDSEL",      IDM_SEL_EXTENDED
+        MENUITEM "CCS_~MULTIPLESEL",    IDM_SEL_MULTIPLE
+    }
+
+    SUBMENU "~Background",              IDM_BKGD_TYPE
+    {
+        MENUITEM "~Red",                IDM_BKGD_RED
+        MENUITEM "~White",              IDM_BKGD_WHITE
+        MENUITEM "~Yellow",             IDM_BKGD_YELLOW
+        MENUITEM "~Blue",               IDM_BKGD_BLUE
+        MENUITEM "~Grey",               IDM_BKGD_GREY
+        MENUITEM "B~itmap",             IDM_BKGD_BITMAP
+    }
+}
+
+/*********************************************************************
+ *                  E N D     O F     S O U R C E                    *
+ *********************************************************************/
+

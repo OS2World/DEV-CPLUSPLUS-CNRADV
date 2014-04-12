@@ -1,0 +1,62 @@
+###########################################################################
+#                                                                         #
+# MAKE FILE FOR CNRADV.EXE                                                #
+#                                                                         #
+# NOTES:                                                                  #
+#                                                                         #
+#  To enable the C Set/2 memory management debugging code, uncomment the  #
+#  DEBUGALLOC macro. The debugging info will be sent to CNRADV.DBG.       #
+#                                                                         #
+# HISTORY:                                                                #
+#                                                                         #
+#  11-30-92 - copied from CNRMENU.EXE sample.                             #
+#             added icons as dependencies of .res file.                   #
+#             added drag.c to build list.                                 #
+#             added draw.c to build list.                                 #
+#                                                                         #
+#  Rick Fishman                                                           #
+#  Code Blazers, Inc.                                                     #
+#  4113 Apricot                                                           #
+#  Irvine, CA. 92720                                                      #
+#  CIS ID: 72251,750                                                      #
+#                                                                         #
+###########################################################################
+
+#DEBUGALLOC=-D__DEBUG_ALLOC__
+
+BASE=cnradv
+
+CFLAGS=/Q+ /Ss /W3 /Kbcepr /Gm+ /Gd- /Ti+ /O- $(DEBUGALLOC) /C
+LFLAGS=/NOI /NOE /MAP /DE /NOL /A:16 /EXEPACK /BASE:65536
+
+.SUFFIXES: .c
+
+.c.obj:
+    icc $(CFLAGS) $*.c
+
+OFILES=$(BASE).obj create.obj populate.obj common.obj ctxtmenu.obj edit.obj \
+       sort.obj drag.obj draw.obj
+
+LFILES=$(OFILES:.obj=)
+
+$(BASE).exe: $(OFILES) $(BASE).res $(BASE).def
+    link386 $(LFLAGS) $(LFILES),,, os2386, $*
+    rc $*.res $@
+
+$(BASE).res: $*.rc $*.ico folder.ico cnrbgd.bmp $(BASE).h makefile
+    rc -r $*
+
+$(BASE).obj:  $*.c $(BASE).h makefile
+create.obj:   $*.c $(BASE).h makefile
+common.obj:   $*.c $(BASE).h makefile
+populate.obj: $*.c $(BASE).h makefile
+ctxtmenu.obj: $*.c $(BASE).h makefile
+edit.obj:     $*.c $(BASE).h makefile
+sort.obj:     $*.c $(BASE).h makefile
+drag.obj:     $*.c $(BASE).h makefile
+draw.obj:     $*.c $(BASE).h makefile
+
+###########################################################################
+#                       E N D   O F   S O U R C E                         #
+###########################################################################
+
