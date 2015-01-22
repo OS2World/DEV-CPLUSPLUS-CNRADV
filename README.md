@@ -6,7 +6,7 @@ CNRADV sample program for container controls that builds on the CNRMENU.EXE samp
 
 LICENSE
 ===============
-* Not Specified
+* Public Domain
 
 COMPILE TOOLS
 ===============
